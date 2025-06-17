@@ -5,6 +5,7 @@ import sys
 from tkinter import RIGHT
 from turtle import screensize
 import pygame as pg
+import time
 
 
 WIDTH, HEIGHT = 1100, 650
@@ -13,12 +14,46 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 DELTA = {pg.K_UP: (0, -5), pg.K_DOWN: (0, 5), pg.K_RIGHT: (5, 0), pg.K_LEFT: (-5, 0)}
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
+    """
+    引数：こうかとんRectかばくだんRect
+    戻り値：タプル（横方向判定結果，縦方向判定結果）
+    画面内ならTrue,画面外ならFalse
+    """
     wid, hgt = True, True
     if obj_rct.left < 0 or obj_rct.right > WIDTH:
         wid = False
     elif obj_rct.top > HEIGHT or obj_rct.bottom < 0:
         hgt = False
     return wid, hgt
+
+def gameover(screen: pg.Surface) -> None:
+    """
+    こうかとんに爆弾が着弾した際に、
+    1. 画面をブラックアウトし、
+    2. 泣いているこうかとん画像と
+    3. 「Game Over」の文字列を
+    4. 5秒間表示させ、
+    5. display.update()する
+    """
+    go_img = pg.Surface((WIDTH, HEIGHT))
+    go_img.set_alpha(180)
+    go_img.fill((0, 0, 0))
+    pg.draw.rect(go_img, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
+    screen.blit(go_img, (0, 0))
+
+    gokk_img = pg.image.load("fig/8.png")
+    gokk1_rct = gokk_img.get_rect(center=(WIDTH/2-300, HEIGHT/2))
+    gokk2_rct = gokk_img.get_rect(center=(WIDTH/2+300, HEIGHT/2))
+    screen.blit(gokk_img, gokk1_rct)
+    screen.blit(gokk_img, gokk2_rct)
+
+    font = pg.font.Font(None, 100)
+    text = font.render("Game Over", True, (255, 255, 255))
+    text_rct = text.get_rect(center=(WIDTH//2, HEIGHT//2))
+    screen.blit(text, text_rct)
+
+    pg.display.update()
+    time.sleep(5)
 
 
 
@@ -68,7 +103,9 @@ def main():
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
         
         if kk_rct.colliderect(bb_rct):
+            gameover(screen)
             return
+
 
 if __name__ == "__main__":
     pg.init()
