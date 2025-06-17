@@ -76,7 +76,33 @@ def gameover(screen: pg.Surface) -> None:
     pg.display.update()
     time.sleep(5)
 
+def get_kk_img(sum_mv: tuple[int, int]) -> pg.Surface:
+    """
+    移動量の合計値タプルに対応する向きの画像Surfaceを返す関数。
 
+    Args:
+        sum_mv (tuple[int, int]): (dx, dy) 移動量の合計
+
+    Returns:
+        pg.Surface: 該当する向きに回転・拡大されたこうかとん画像Surface
+    """
+    kk_base_img = pg.image.load("fig/3.png")
+    kk_imgs = {}
+    dx, dy = sum_mv
+    if dx == 0 and dy == 0:
+        img = kk_base_img
+        angle = 0
+    else:
+        import math
+        angle = -math.degrees(math.atan2(dx, -dy)) - 90
+        if dx < 0:
+            img = pg.transform.flip(kk_base_img, True, False)
+        else:
+            img = kk_base_img
+    
+    kk_imgs[(dx, dy)] = pg.transform.rotozoom(img, angle, 1.0)
+
+    return kk_imgs
 
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
@@ -92,8 +118,8 @@ def main():
     bb_img.set_colorkey((0, 0, 0))
     bb_rct = bb_img.get_rect()
     bb_rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-    kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
-    kk_rct = kk_img.get_rect()
+    kk_imgs = get_kk_img(0)
+    kk_rct = kk_imgs.get_rect()
     kk_rct.center = 300, 200
     clock = pg.time.Clock()
     tmr = 0
@@ -130,6 +156,7 @@ def main():
             if key_lst[key]:
                 sum_mv[0] += mv[0]
                 sum_mv[1] += mv[1]
+        kk_img = kk_imgs[tuple(sum_mv)]
         kk_rct.move_ip(sum_mv)
         screen.blit(kk_img, kk_rct)
         pg.display.update()
