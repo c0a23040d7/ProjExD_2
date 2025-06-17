@@ -1,3 +1,4 @@
+from typing import List, Tuple
 from encodings.punycode import T
 import os
 import random
@@ -25,6 +26,26 @@ def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     elif obj_rct.top > HEIGHT or obj_rct.bottom < 0:
         hgt = False
     return wid, hgt
+
+def init_bb_imgs() -> Tuple[List[pg.Surface], List[int]]:
+    """
+    サイズの異なる爆弾Surfaceを要素としたリストと加速度リストを返す。
+
+    Returns:
+        tuple: (bb_imgs, bb_accs)
+            bb_imgs (list[pg.Surface]): 1から10段階の大きさの爆弾画像リスト
+            bb_accs (list[int]): 1から10までの加速度リスト
+    """
+    bb_imgs: List[pg.Surface] = []
+    bb_accs: List[int] = list(range(1, 11))
+
+    for i in range(1, 11):
+        size = 20 * i
+        bb_img = pg.Surface((size, size), pg.SRCALPHA)
+        pg.draw.circle(bb_img, (255, 0, 0), (size/2, size/2), 10*i)
+        bb_imgs.append(bb_img)
+    
+    return bb_imgs, bb_accs
 
 def gameover(screen: pg.Surface) -> None:
     """
@@ -61,7 +82,12 @@ def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")
-    bb_img = pg.Surface((20, 20))
+
+    bb_imgs, bb_accs = init_bb_imgs()
+
+    idx = 0
+    bb_img = bb_imgs[idx]
+    
     pg.draw.circle(bb_img, (255, 0, 0), (10, 10), 10)
     bb_img.set_colorkey((0, 0, 0))
     bb_rct = bb_img.get_rect()
@@ -73,14 +99,31 @@ def main():
     tmr = 0
     vx = 5
     vy = -5
+
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT: 
                 return
         screen.blit(bg_img, [0, 0]) 
+        idx = int(min(tmr/500, 9))
+
+        old_center = bb_rct.center
+        bb_img = bb_imgs[idx]
+        bb_rct = bb_img.get_rect()
+        bb_rct.center = old_center
+
+        bx, by = check_bound(bb_rct)
+        if not bx:
+            vx *= -1
+        elif not by:
+            vy *= -1
+        
+        avx = vx*bb_accs[idx]
+        avy = vy*bb_accs[idx]
+
+        bb_rct.move_ip([avx, avy])
         screen.blit(bb_img, bb_rct)
 
-        bb_rct.move_ip([vx, vy])
         key_lst = pg.key.get_pressed()
         sum_mv = [0, 0]
         for key, mv in DELTA.items():
@@ -92,12 +135,6 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
-
-        bx, by = check_bound(bb_rct)
-        if not bx:
-            vx *= -1
-        elif not by:
-            vy *= -1
         
         if check_bound(kk_rct) != (True, True):
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
