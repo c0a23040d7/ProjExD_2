@@ -56,11 +56,11 @@ def gameover(screen: pg.Surface) -> None:
     4. 5秒間表示させ、
     5. display.update()する
     """
-    go_img = pg.Surface((WIDTH, HEIGHT))
-    go_img.set_alpha(180)
-    go_img.fill((0, 0, 0))
-    pg.draw.rect(go_img, (0, 0, 0), (0, 0, WIDTH, HEIGHT))
-    screen.blit(go_img, (0, 0))
+    go_img = pg.Surface((WIDTH, HEIGHT))#画像の大きさ
+    go_img.set_alpha(180)#画像の透明度
+    go_img.fill((0, 0, 0))#画像の色
+    pg.draw.rect(go_img, (0, 0, 0), (0, 0, WIDTH, HEIGHT))#四角を描画
+    screen.blit(go_img, (0, 0))#画面に表示
 
     gokk_img = pg.image.load("fig/8.png")
     gokk1_rct = gokk_img.get_rect(center=(WIDTH/2-300, HEIGHT/2))
